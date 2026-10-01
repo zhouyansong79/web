@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#70ad47">
+<title>旅游车辆排班系统</title>
+<style>
+:root{
+  --green:#70ad47;--green2:#e2f0d9;--dark:#2f3b2f;--line:#dfe5df;
+  --bg:#f5f7f5;--card:#fff;--text:#263126;--muted:#748074;
+  --red:#f4cccc;--orange:#fce4d6;--yellow:#fff2cc;--blue:#ddebf7;
+  --purple:#e4dfec;--gray:#e7e6e6;--shadow:0 2px 12px rgba(30,50,30,.08)
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","Microsoft YaHei",sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.topbar{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#70ad47,#83bd59);color:#fff;padding:12px 14px;box-shadow:0 2px 10px #0002}
+.topbar .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{font-size:19px;font-weight:800}.sub{font-size:11px;opacity:.9}
+.container{max-width:1200px;margin:auto;padding:12px 12px 80px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border:0;background:#fff;color:#536153;border-radius:999px;padding:9px 14px;white-space:nowrap;box-shadow:0 1px 5px #0001}
+.tab.active{background:var(--dark);color:#fff}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:12px;margin-bottom:12px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+input,select{border:1px solid #cfd8cf;border-radius:9px;background:#fff;padding:9px 10px;color:var(--text)}
+input[type=date]{min-width:145px}
+.btn{border:0;border-radius:9px;padding:9px 13px;background:var(--dark);color:#fff}
+.btn.green{background:var(--green)}.btn.light{background:var(--green2);color:#35532c}.btn.red{background:#c94b4b}
+.btn.small{padding:6px 9px;font-size:12px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}.kpi b{display:block;font-size:20px;margin-top:4px}.kpi span{font-size:12px;color:var(--muted)}
+.day-title{font-size:16px;font-weight:800;margin:4px 0}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.job{border:1px solid var(--line);border-left:6px solid var(--green);border-radius:12px;padding:11px;background:#fff}
+.job .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.job .vehicle{font-weight:800;font-size:17px}.job .customer{font-size:15px;font-weight:700}
+.job .meta{font-size:13px;color:#596359;margin-top:6px;line-height:1.6}
+.badge{display:inline-block;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:700}
+.b-接机{background:var(--red)}.b-送机{background:var(--orange)}.b-包车{background:var(--yellow)}
+.b-拼车{background:var(--blue)}.b-高尔夫{background:var(--green2)}.b-外注{background:var(--purple)}.b-休息{background:var(--gray)}
+.status{padding:3px 7px;border-radius:999px;font-size:11px;background:#eee}.ok{background:var(--green2)}.wait{background:var(--yellow)}.cancel{background:var(--red)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:760px;background:#fff}th,td{border-bottom:1px solid var(--line);padding:8px 9px;text-align:left;vertical-align:middle;font-size:13px}th{background:var(--dark);color:#fff;position:sticky;top:0;z-index:2}tr:hover td{background:#fafcf9}
+.empty{text-align:center;color:var(--muted);padding:28px}
+.section-title{font-size:17px;font-weight:800;margin:4px 0 10px}
+.month-grid{overflow:auto}.month{border-collapse:separate;border-spacing:2px;min-width:1050px}.month th,.month td{border:0;text-align:center;padding:5px;font-size:11px;min-width:37px}.month th{background:var(--dark);position:sticky;top:0}.month td:first-child,.month th:first-child{position:sticky;left:0;z-index:3;background:#fff;font-weight:800;min-width:72px}.month th:first-child{background:var(--dark)}
+.cell{border-radius:5px;min-height:28px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;padding:3px}
+.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.form-grid label{font-size:11px;color:var(--muted)}.form-grid input,.form-grid select{width:100%;margin-top:3px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.hidden{display:none!important}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:8px;display:flex;gap:6px;justify-content:center;z-index:30}
+.bottom button{flex:1;max-width:180px}
+.notice{font-size:12px;color:var(--muted);line-height:1.5}
+@media(max-width:700px){
+ .container{padding:8px 8px 76px}.topbar{padding:10px 10px}
+ .brand{font-size:17px}.sub{display:none}.tabs{gap:5px}
+ .tab{padding:8px 11px;font-size:12px}.panel{padding:10px;border-radius:12px}
+ .kpis{grid-template-columns:repeat(2,1fr)}
+ .cards{grid-template-columns:1fr}
+ .job{padding:10px}.job .vehicle{font-size:16px}
+ .form-grid{grid-template-columns:repeat(2,1fr)}
+ .desktop-only{display:none!important}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="row">
+    <div><div class="brand">🚐 旅游车辆排班</div><div class="sub">手机优先 · 本地保存 · 单文件 HTML</div></div>
+    <button class="btn light" onclick="addJob()">＋ 新增</button>
+  </div>
+</header>
+
+<main class="container">
+  <nav class="tabs">
+    <button class="tab active" data-tab="phone">📱 今日</button>
+    <button class="tab" data-tab="month">📅 月度</button>
+    <button class="tab" data-tab="driver">👨‍✈️ 司机</button>
+    <button class="tab" data-tab="vehicle">🚐 车辆</button>
+    <button class="tab" data-tab="request">💴 请求书</button>
+    <button class="tab" data-tab="data">📝 数据</button>
+  </nav>
+
+  <section id="phone" class="view">
+    <div class="panel">
+      <div class="toolbar">
+        <button class="btn small" onclick="moveDate(-1)">← 前一天</button>
+        <input id="phoneDate" type="date" onchange="renderAll()">
+        <button class="btn small" onclick="setToday()">今天</button>
+        <button class="btn small" onclick="moveDate(1)">后一天 →</button>
+      </div>
+      <div class="kpis" id="phoneKpis"></div>
+    </div>
+    <div class="panel">
+      <div class="day-title" id="dayTitle"></div>
+      <div id="phoneCards" class="cards"></div>
+    </div>
+  </section>
+
+  <section id="month" class="view hidden">
+    <div class="panel">
+      <div class="toolbar"><label>月份 <input id="monthDate" type="month" onchange="renderMonth()"></label>
+      <span class="notice">点击日期单元格可直接查看当天排班。</span></div>
+    </div>
+    <div class="panel"><div id="monthGrid" class="month-grid"></div></div>
+  </section>
+
+  <section id="driver" class="view hidden">
+    <div class="panel">
+      <div class="toolbar"><label>日期 <input id="driverDate" type="date" onchange="renderDriver()"></label>
+      <label>司机 <select id="driverSelect" onchange="renderDriver()"></select></label></div>
+    </div>
+    <div class="panel"><div id="driverList"></div></div>
+  </section>
+
+  <section id="vehicle" class="view hidden">
+    <div class="panel">
+      <div class="toolbar"><label>日期 <input id="vehicleDate" type="date" onchange="renderVehicle()"></label>
+      <label>车辆 <select id="vehicleSelect" onchange="renderVehicle()"></select></label></div>
+    </div>
+    <div class="panel"><div id="vehicleList"></div></div>
+  </section>
+
+  <section id="request" class="view hidden">
+    <div class="panel">
+      <div class="toolbar"><label>月份 <input id="requestMonth" type="month" onchange="renderRequests()"></label>
+      <button class="btn small" onclick="exportCSV()">导出 CSV</button></div>
+      <div class="kpis" id="requestKpis"></div>
+    </div>
+    <div class="panel"><div id="requestTable" class="table-wrap"></div></div>
+  </section>
+
+  <section id="data" class="view hidden">
+    <div class="panel">
+      <div class="section-title">新增 / 编辑排班</div>
+      <form id="jobForm" class="form-grid" onsubmit="saveJob(event)">
+        <input type="hidden" id="editId">
+        <label>日期<input id="fDate" type="date" required></label>
+        <label>车辆<select id="fVehicle" required></select></label>
+        <label>客户<input id="fCustomer" required placeholder="例如：吉田"></label>
+        <label>业务<select id="fType"></select></label>
+        <label>出发时间<input id="fStart" type="time"></label>
+        <label>结束时间<input id="fEnd" type="time"></label>
+        <label>出发地<input id="fFrom" placeholder="成田机场"></label>
+        <label>目的地<input id="fTo" placeholder="东京"></label>
+        <label>司机<select id="fDriver"></select></label>
+        <label>人数<input id="fPeople" type="number" min="0" value="1"></label>
+        <label>状态<select id="fStatus"></select></label>
+        <label>请求书<select id="fReq"></select></label>
+        <label>收款<select id="fPay"></select></label>
+        <label>发票<select id="fInvoice"></select></label>
+        <label style="grid-column:1/-1">备注<input id="fNote" placeholder="例如：需要儿童座椅 / 高尔夫行李"></label>
+        <div class="actions" style="grid-column:1/-1">
+          <button class="btn green" type="submit">保存排班</button>
+          <button class="btn light" type="button" onclick="resetForm()">清空</button>
+        </div>
+      </form>
+    </div>
+    <div class="panel">
+      <div class="toolbar"><input id="searchData" placeholder="搜索车辆 / 客户 / 司机 / 地点..." oninput="renderData()"><button class="btn small red" onclick="clearAll()">清空全部数据</button></div>
+      <div id="dataTable" class="table-wrap"></div>
+    </div>
+  </section>
+</main>
+
+<div class="bottom">
+  <button class="btn green" onclick="switchTab('phone')">📱 今日排班</button>
+  <button class="btn" onclick="addJob()">＋ 新增任务</button>
+</div>
+
+<script>
+const KEY='travel_schedule_v1';
+const vehicles=['2918','2875','572','264','4410','4409','3652','9716','1024','3761','9'];
+const drivers=['二羽','阿4','四代','中型','小王','小王S','小王二羽','小陈','小李'];
+const types=['接机','送机','包车','拼车','高尔夫','外注','休息','其他'];
+const statuses=['已确认','待确认','取消','休息','完成'];
+const reqs=['未做','已做','无需'], pays=['未收','已收','部分'], invoices=['未开','已开','无需'];
+const seed=[
+ {date:'2026-09-15',vehicle:'2918',customer:'吉田',type:'接机',start:'09:30',end:'12:00',from:'成田机场',to:'东京',driver:'二羽',people:3,status:'已确认',req:'已做',pay:'已收',invoice:'未开',note:''},
+ {date:'2026-09-15',vehicle:'2875',customer:'原田',type:'接机',start:'10:00',end:'14:00',from:'成田机场',to:'大阪',driver:'阿4',people:4,status:'已确认',req:'已做',pay:'未收',invoice:'未开',note:''},
+ {date:'2026-09-15',vehicle:'572',customer:'山水',type:'高尔夫',start:'07:30',end:'18:00',from:'东京',to:'高尔夫球场',driver:'四代',people:4,status:'已确认',req:'未做',pay:'已收',invoice:'无需',note:''},
+ {date:'2026-09-15',vehicle:'264',customer:'薛飞',type:'包车',start:'09:00',end:'19:00',from:'名古屋',to:'大阪',driver:'中型',people:3,status:'已确认',req:'已做',pay:'已收',invoice:'未开',note:''},
+ {date:'2026-09-16',vehicle:'2918',customer:'吉田',type:'包车',start:'09:00',end:'18:00',from:'东京',to:'山水球场',driver:'二羽',people:4,status:'待确认',req:'未做',pay:'未收',invoice:'未开',note:''},
+ {date:'2026-09-16',vehicle:'2875',customer:'原田',type:'送机',start:'14:00',end:'18:00',from:'大阪',to:'关西机场',driver:'阿4',people:4,status:'已确认',req:'已做',pay:'已收',invoice:'已开',note:''},
+ {date:'2026-09-17',vehicle:'572',customer:'金泽',type:'接机',start:'10:30',end:'13:00',from:'羽田机场',to:'东京',driver:'四代',people:2,status:'已确认',req:'未做',pay:'未收',invoice:'无需',note:''}
+];
+let jobs=JSON.parse(localStorage.getItem(KEY)||'null')||seed.map(x=>({...x,id:crypto.randomUUID()}));
+
+function save(){localStorage.setItem(KEY,JSON.stringify(jobs))}
+function today(){return new Date().toISOString().slice(0,10)}
+function setToday(){phoneDate.value=today();renderAll()}
+function fmt(d){let x=new Date(d+'T00:00:00');return `${x.getFullYear()}/${x.getMonth()+1}/${x.getDate()}`}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function badge(type){return `<span class="badge b-${esc(type)}">${esc(type)}</span>`}
+function status(s){let c=s==='已确认'||s==='完成'?'ok':s==='待确认'?'wait':s==='取消'?'cancel':'';return `<span class="status ${c}">${esc(s)}</span>`}
+
+function fillSelect(id,arr){
+ const el=document.getElementById(id); if(!el)return;
+ el.innerHTML=arr.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+}
+function init(){
+ const d=today();
+ ['phoneDate','driverDate','vehicleDate'].forEach(id=>document.getElementById(id).value=d);
+ const m=d.slice(0,7); monthDate.value=m;requestMonth.value=m;
+ fillSelect('driverSelect',drivers);fillSelect('vehicleSelect',vehicles);
+ fillSelect('fVehicle',vehicles);fillSelect('fDriver',drivers);fillSelect('fType',types);
+ fillSelect('fStatus',statuses);fillSelect('fReq',reqs);fillSelect('fPay',pays);fillSelect('fInvoice',invoices);
+ renderAll();
+ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+}
+function switchTab(name){
+ document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('hidden',v.id!==name));
+ if(name==='month')renderMonth();if(name==='driver')renderDriver();if(name==='vehicle')renderVehicle();if(name==='request')renderRequests();if(name==='data')renderData();
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function moveDate(n){let d=new Date(phoneDate.value+'T00:00:00');d.setDate(d.getDate()+n);phoneDate.value=d.toISOString().slice(0,10);renderAll()}
+function renderAll(){renderPhone();renderDriver();renderVehicle();renderRequests();renderData()}
+
+function renderPhone(){
+ const d=phoneDate.value;const a=jobs.filter(j=>j.date===d).sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+ dayTitle.textContent=`${fmt(d)} · ${a.length} 个任务`;
+ phoneKpis.innerHTML=[
+  ['车辆数',new Set(a.map(x=>x.vehicle)).size],['任务数',a.length],
+  ['待确认',a.filter(x=>x.status==='待确认').length],['请求书未做',a.filter(x=>x.req==='未做').length]
+ ].map(x=>`<div class="kpi"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');
+ phoneCards.innerHTML=a.length?a.map(j=>jobCard(j)).join(''):`<div class="empty">今天没有排班 🎉</div>`;
+}
+function jobCard(j){
+ return `<div class="job" style="border-left-color:${colorFor(j.type)}">
+  <div class="top"><div><div class="vehicle">🚐 ${esc(j.vehicle)} · ${esc(j.customer)}</div><div style="margin-top:5px">${badge(j.type)} ${status(j.status)}</div></div>
+  <button class="btn small" onclick="editJob('${j.id}')">编辑</button></div>
+  <div class="meta">🕐 ${esc(j.start||'')} ${j.end?'～ '+esc(j.end):''}<br>📍 ${esc(j.from||'')} → ${esc(j.to||'')}<br>👨‍✈️ ${esc(j.driver||'-')}　👥 ${esc(j.people||0)} 人<br>📄 请求书：${esc(j.req)}　💰 ${esc(j.pay)}　🧾 ${esc(j.invoice)}</div>
+  ${j.note?`<div class="notice">备注：${esc(j.note)}</div>`:''}
+ </div>`;
+}
+function colorFor(t){return ({'接机':'#d66','送机':'#e99','包车':'#e3b93f','拼车':'#6aa9d9','高尔夫':'#70ad47','外注':'#9676b5','休息':'#aaa'})[t]||'#70ad47'}
+
+function renderMonth(){
+ const m=monthDate.value||today().slice(0,7), [y,mo]=m.split('-').map(Number), days=new Date(y,mo,0).getDate();
+ let h='<table class="month"><thead><tr><th>车辆</th>';
+ for(let d=1;d<=days;d++)h+=`<th>${d}</th>`;h+='<th>任务</th></tr></thead><tbody>';
+ for(const v of vehicles){
+  const rows=jobs.filter(j=>j.vehicle===v&&j.date.startsWith(m));
+  h+=`<tr><td>${esc(v)}</td>`;
+  for(let d=1;d<=days;d++){
+   const a=rows.filter(j=>Number(j.date.slice(8,10))===d);
+   const txt=a.length?a.map(x=>x.type).join('/'):'';const t=a[0]?.type;
+   h+=`<td onclick="${a.length?`phoneDate.value='${a[0].date}';switchTab('phone')`:''}" title="${esc(a.map(x=>x.customer+' '+x.type).join('\\n'))}"><div class="cell" style="background:${t?colorFor(t)+'33':'#fafafa'}">${esc(txt)}</div></td>`;
+  }
+  h+=`<td>${rows.length}</td></tr>`;
+ }
+ h+='</tbody></table>';monthGrid.innerHTML=h;
+}
+
+function renderDriver(){
+ const d=driverDate.value,v=driverSelect.value;
+ const a=jobs.filter(j=>j.date===d&&j.driver===v).sort((x,y)=>(x.start||'').localeCompare(y.start||''));
+ driverList.innerHTML=a.length?table(a,'司机'):empty('该司机今天暂无任务');
+}
+function renderVehicle(){
+ const d=vehicleDate.value,v=vehicleSelect.value;
+ const a=jobs.filter(j=>j.date===d&&j.vehicle===v).sort((x,y)=>(x.start||'').localeCompare(y.start||''));
+ vehicleList.innerHTML=a.length?table(a,'车辆'):empty('该车辆今天暂无任务');
+}
+function empty(t){return `<div class="empty">${t}</div>`}
+function table(a){
+ return `<div class="table-wrap"><table><thead><tr><th>时间</th><th>车辆</th><th>客户</th><th>业务</th><th>行程</th><th>司机</th><th>人数</th><th>状态</th><th>操作</th></tr></thead><tbody>
+ ${a.map(j=>`<tr><td>${esc(j.start)}${j.end?' ～ '+esc(j.end):''}</td><td>${esc(j.vehicle)}</td><td>${esc(j.customer)}</td><td>${badge(j.type)}</td><td>${esc(j.from)} → ${esc(j.to)}</td><td>${esc(j.driver)}</td><td>${esc(j.people)}</td><td>${status(j.status)}</td><td><button class="btn small" onclick="editJob('${j.id}')">编辑</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function renderRequests(){
+ const m=requestMonth.value||today().slice(0,7),a=jobs.filter(j=>j.date.startsWith(m)).sort((x,y)=>x.date.localeCompare(y.date)||(x.start||'').localeCompare(y.start||''));
+ requestKpis.innerHTML=[['请求书未做',a.filter(x=>x.req==='未做').length],['未收款',a.filter(x=>x.pay==='未收').length],['发票未开',a.filter(x=>x.invoice==='未开').length],['本月任务',a.length]].map(x=>`<div class="kpi"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');
+ requestTable.innerHTML=a.length?`<table><thead><tr><th>日期</th><th>车辆</th><th>客户</th><th>业务</th><th>请求书</th><th>收款</th><th>发票</th><th>备注</th><th>操作</th></tr></thead><tbody>${a.map(j=>`<tr><td>${fmt(j.date)}</td><td>${esc(j.vehicle)}</td><td>${esc(j.customer)}</td><td>${badge(j.type)}</td><td>${esc(j.req)}</td><td>${esc(j.pay)}</td><td>${esc(j.invoice)}</td><td>${esc(j.note)}</td><td><button class="btn small" onclick="editJob('${j.id}')">编辑</button></td></tr>`).join('')}</tbody></table>`:empty('本月暂无记录');
+}
+function renderData(){
+ const q=(searchData.value||'').toLowerCase();
+ const a=jobs.filter(j=>Object.values(j).join(' ').toLowerCase().includes(q)).sort((x,y)=>x.date.localeCompare(y.date)||(x.start||'').localeCompare(y.start||''));
+ dataTable.innerHTML=a.length?`<table><thead><tr><th>日期</th><th>车辆</th><th>客户</th><th>业务</th><th>时间</th><th>行程</th><th>司机</th><th>状态</th><th>请求书</th><th>收款</th><th>操作</th></tr></thead><tbody>${a.map(j=>`<tr><td>${fmt(j.date)}</td><td>${esc(j.vehicle)}</td><td>${esc(j.customer)}</td><td>${badge(j.type)}</td><td>${esc(j.start)}～${esc(j.end)}</td><td>${esc(j.from)} → ${esc(j.to)}</td><td>${esc(j.driver)}</td><td>${status(j.status)}</td><td>${esc(j.req)}</td><td>${esc(j.pay)}</td><td><button class="btn small" onclick="editJob('${j.id}')">编辑</button> <button class="btn small red" onclick="deleteJob('${j.id}')">删除</button></td></tr>`).join('')}</tbody></table>`:empty('暂无数据');
+}
+
+function readForm(){
+ return {id:editId.value||crypto.randomUUID(),date:fDate.value,vehicle:fVehicle.value,customer:fCustomer.value.trim(),type:fType.value,start:fStart.value,end:fEnd.value,from:fFrom.value.trim(),to:fTo.value.trim(),driver:fDriver.value,people:Number(fPeople.value||0),status:fStatus.value,req:fReq.value,pay:fPay.value,invoice:fInvoice.value,note:fNote.value.trim()};
+}
+function saveJob(e){
+ e.preventDefault();const j=readForm(),idx=jobs.findIndex(x=>x.id===j.id);
+ if(idx>=0)jobs[idx]=j;else jobs.push(j);save();resetForm();renderAll();switchTab('phone');phoneDate.value=j.date;renderPhone();
+}
+function addJob(){
+ switchTab('data');resetForm();fDate.value=phoneDate.value||today();fStart.value='09:00';fEnd.value='12:00';
+}
+function editJob(id){
+ const j=jobs.find(x=>x.id===id);if(!j)return;switchTab('data');
+ editId.value=j.id;fDate.value=j.date;fVehicle.value=j.vehicle;fCustomer.value=j.customer;fType.value=j.type;fStart.value=j.start;fEnd.value=j.end;fFrom.value=j.from;fTo.value=j.to;fDriver.value=j.driver;fPeople.value=j.people;fStatus.value=j.status;fReq.value=j.req;fPay.value=j.pay;fInvoice.value=j.invoice;fNote.value=j.note;
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function resetForm(){
+ editId.value='';fDate.value=today();fVehicle.value=vehicles[0];fCustomer.value='';fType.value='接机';fStart.value='';fEnd.value='';fFrom.value='';fTo.value='';fDriver.value=drivers[0];fPeople.value=1;fStatus.value='已确认';fReq.value='未做';fPay.value='未收';fInvoice.value='未开';fNote.value='';
+}
+function deleteJob(id){if(confirm('确定删除这条排班吗？')){jobs=jobs.filter(x=>x.id!==id);save();renderAll()}}
+function clearAll(){if(confirm('确定清空全部排班数据吗？此操作不可恢复。')){jobs=[];save();renderAll()}}
+function exportCSV(){
+ const m=requestMonth.value||today().slice(0,7),a=jobs.filter(j=>j.date.startsWith(m));
+ const cols=['日期','车辆','客户','业务','出发时间','结束时间','出发地','目的地','司机','人数','状态','请求书','收款','发票','备注'];
+ const rows=a.map(j=>[j.date,j.vehicle,j.customer,j.type,j.start,j.end,j.from,j.to,j.driver,j.people,j.status,j.req,j.pay,j.invoice,j.note]);
+ const csv='\\ufeff'+[cols,...rows].map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),aEl=document.createElement('a');
+ aEl.href=url;aEl.download=`车辆排班_${m}.csv`;aEl.click();URL.revokeObjectURL(url);
+}
+init();
+</script>
+</body>
+</html>
